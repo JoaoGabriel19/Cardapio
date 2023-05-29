@@ -4,6 +4,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -16,6 +17,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         private final TextView textView;
+        private final ImageView imageView;
         public ViewHolder(View v) {
             super(v);
             // Define click listener for the ViewHolder's View.
@@ -26,9 +28,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 }
             });
             textView = (TextView) v.findViewById(R.id.textViewNomeComida);
+            imageView = (ImageView) v.findViewById(R.id.idImagemComida);
         }
         public TextView getTextView() {
             return textView;
+        }
+        public ImageView getImageView(){
+            return imageView;
         }
     }
 
@@ -47,6 +53,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         Log.d(TAG, "Element " + position + " set.");
         Produto p = mDataSet[position];
         viewHolder.getTextView().setText(p.getNome());
+        viewHolder.getImageView().setImageBitmap(p.getBm());
     }
 
     @Override
