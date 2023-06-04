@@ -11,6 +11,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 
 
+import com.example.atividade03.dao.Dao;
 import com.example.atividade03.entidade.Produto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonArray;
@@ -122,7 +123,8 @@ public class MainActivity extends AppCompatActivity {
 
                         Produto produto = new Produto(nome, url, descricao, preco, calorias, glutem);
                         listaProdutos.add(produto);
-                        System.out.println(listaProdutos.get(i).getNome());
+                        Dao dao = new Dao(MainActivity.this);
+                        dao.novoPrato(produto.getNome(), produto.getDescricao(), produto.getPreco(), produto.getCalorias(), produto.getUrl(), produto.getGlutem());
                         new ThreadImageFile().execute(produto);
                     }
 
