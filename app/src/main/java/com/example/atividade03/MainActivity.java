@@ -9,28 +9,51 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
+
 
 import com.example.atividade03.entidade.Produto;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     Produto[] produtos;
+    List<Produto> listaProdutos = new ArrayList<>();
+
     Activity tela = this;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Produto p1 = new Produto("Macarronada", "https://static.wikia.nocookie.net/ptstarwars/images/0/01/Hansoloprofile.jpg/revision/latest/top-crop/width/360/height/450?cb=20120222133702\"");
-        produtos = new Produto[]{p1};
-        for (Produto p : produtos) {
+        new request().execute();
+        //Produto p1 = new Produto("macarronada", "https://static.wikia.nocookie.net/ptstarwars/images/0/01/Hansoloprofile.jpg/revision/latest/top-crop/width/360/height/450?cb=20120222133702\"", null, 1, 1, null);
+        //produtos = new Produto[]{p1};
+
+        //produtos = listaProdutos.toArray(new Produto[listaProdutos.size()]);
+        /*for (Produto p : produtos) {
             new ThreadImageFile().execute(p);
-        }
+
+        }*/
     }
     private class ThreadImageFile extends AsyncTask<Produto, Integer, byte[]> {
         @Override protected
@@ -59,10 +82,57 @@ public class MainActivity extends AppCompatActivity {
         }
         @Override protected
         void onPostExecute (byte[] result) {
-            RecyclerViewAdapter ca = new RecyclerViewAdapter(produtos);
+            Produto[] novosProdutos = listaProdutos.toArray(new Produto[listaProdutos.size()]);
+            RecyclerViewAdapter ca = new RecyclerViewAdapter(novosProdutos);
             RecyclerView cv = findViewById(R.id.recyclerViewCardapio);
             cv.setLayoutManager(new LinearLayoutManager(tela, LinearLayoutManager.HORIZONTAL, false));
             cv.setAdapter(ca);
         }
     }
-}
+    private class request extends AsyncTask<Void, Void, String> {
+        String resultado;
+
+
+        protected String doInBackground(Void... voids) {
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder().url("http://192.168.0.100:8080/Cardapio/Servlet")
+                    .build();
+            try (Response response = client.newCall(request).execute()) {
+                resultado = response.body().string();
+                return resultado;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        protected void onPostExecute(String result) {
+            if (resultado != null) {
+                try {
+                    JSONObject jsonObject = new JSONObject(resultado);
+                    JSONArray produtoArray = jsonObject.getJSONArray("produto");
+                    for (int i = 0; i < produtoArray.length(); i++) {
+                        JSONObject objetoProduto = produtoArray.getJSONObject(i);
+
+                        String nome = objetoProduto.getString("nome");
+                        String descricao = objetoProduto.getString("descricao");
+                        double preco = objetoProduto.getDouble("preco");
+                        String glutem = objetoProduto.getString("glutem");
+                        int calorias = objetoProduto.getInt("calorias");
+                        String url = objetoProduto.getString("imagem");
+
+                        Produto produto = new Produto(nome, url, descricao, preco, calorias, glutem);
+                        listaProdutos.add(produto);
+                        System.out.println(listaProdutos.get(i).getNome());
+                        new ThreadImageFile().execute(produto);
+                    }
+
+
+                        } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                        }
+                    }
+                }
+            }
+
+    }
+
